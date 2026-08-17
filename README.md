@@ -1,54 +1,67 @@
-# Chat With PDF - Application
+# History-Aware RAG for PDF Q&A
 
-This project provides a chatbot application with a **FastAPI** backend and a **Streamlit** frontend. The backend serves API endpoints for query processing, while the frontend is responsible for interacting with users and displaying responses. The chatbot can answer questions based on information extracted from uploaded PDFs.
+A history-aware RAG (Retrieval-Augmented Generation) chatbot for PDFs, with a
+**FastAPI** backend and a **Streamlit** frontend. Upload a PDF, then ask
+questions about it including follow-up questions that reference earlier
+turns in the conversation.
 
-## Features
-- **FastAPI** backend for processing and serving chatbot queries.
-- **Streamlit** frontend for an interactive user interface.
-- PDF document upload and text extraction functionality.
-- Integration with Natural Language Processing (NLP) models for answering questions based on document content.
-- Deployment-ready with Docker for easy setup and distribution.
+## Architecture
 
-## Setup Instructions
+```
+Streamlit frontend  --(HTTP)-->  FastAPI backend
+                                       |
+                          /upload_pdf/  --> chunk, embed, save FAISS index
+                          /chat/        --> history-aware retrieval + QA
+```
 
-### Prerequisites
+Both the document upload **and** the actual chat/question-answering are
+served by the FastAPI backend. The frontend is a thin client that just
+calls these two endpoints and displays the conversation.
 
-Before setting up the project, ensure you have the following:
-- Python 3.9 or higher.
-- Docker (optional, for containerized deployment).
-- Git (to clone the repository).
+## Setup
 
-### Step-by-Step Setup
+### Install
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/saniazeb97/Project-Chatbot.git
-   cd Project-Chatbot
+```bash
+git clone https://github.com/saniazeb97/history_aware_RAG.git
+cd history_aware_RAG
+pip install -r requirements.txt
+```
 
-2. **Install Dependencies**:
-    pip install -r requirements.txt
+### Run
 
-3. **Running the Application**:
-    
-    ### Start FastAPI Backend:
-    uvicorn app.main:app --host 0.0.0.0 --port 8000
+**Start the FastAPI backend:**
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
 
-    ### Start Streamlit Frontend:
-    streamlit run streamlit/main.py
+**Start the Streamlit frontend**:
+```bash
+cd streamlit
+streamlit run main.py
+```
 
+## API Reference
 
-## API Documentation
+### `POST /upload_pdf/`
+Uploads a PDF, chunks and embeds it, and saves a FAISS index.
 
-### `/upload_pdf`
+- **Request**: multipart form-data, key `file`
+- **Response**:
+  ```json
+  {"status": "success", "message": "PDF processed successfully!", "doc_id": "..."}
+  ```
 
-- **Method**: `POST`
-- **Description**: Uploads a PDF document to the backend for extraction and processing.
-- **Request Body**: Form-data with a key file (file input).
+### `POST /chat/`
+Answers a question about a previously-uploaded document, using
+session-scoped chat history for follow-up-question awareness.
 
-```Response
-{
-
-  "message": "File uploaded successfully."
-}
-
+- **Request body**:
+  ```json
+  {"doc_id": "...", "session_id": "...", "question": "What is Phase 1?"}
+  ```
+- **Response**:
+  ```json
+  {"status": "success", "answer": "..."}
+  ```
 
