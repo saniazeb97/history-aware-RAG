@@ -23,8 +23,8 @@ calls these two endpoints and displays the conversation.
 ### Install
 
 ```bash
-git clone https://github.com/saniazeb97/history_aware_RAG.git
-cd history_aware_RAG
+git clone https://github.com/saniazeb97/history-aware-RAG.git
+cd history-aware-RAG
 pip install -r requirements.txt
 ```
 
